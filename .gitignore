@@ -1,0 +1,5 @@
+# Игнорировать папку настроек IDE (PyCharm, IntelliJ)
+.idea/
+
+# Игнорировать кеши Python
+__pycache__/
