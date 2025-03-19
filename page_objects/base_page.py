@@ -1,38 +1,91 @@
-from selenium.common import NoSuchElementException
+import allure
+from locators import Locators
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import NoSuchElementException
 
 
 class BasePage:
     def __init__(self, driver):
         self.driver = driver
-        self.wait = WebDriverWait(driver, 10)
+        self.locators = Locators()
 
+    @allure.step("Кликаем по элементу с локатором {locator}")
     def click_on_element(self, locator):
-        try:
-            element = self.wait.until(EC.element_to_be_clickable(locator))
-            element.click()
-        except Exception as e:
-            print(f"Ошибка при клике на элемент: {e}")
+        element = self.wait_for_element_to_be_clickable(locator)
+        element.click()
 
+    @allure.step("Ожидаем, что элемент с локатором {locator} станет кликабельным в течение {timeout} секунд")
+    def wait_for_element_to_be_clickable(self, locator, timeout=10):
+        return WebDriverWait(self.driver, timeout).until(
+            EC.element_to_be_clickable(locator))
+
+    @allure.step("Ожидаем, что элемент с локатором {locator} станет видимым в течение {timeout} секунд")
+    def wait_for_element_visibility(self, locator, timeout=10):
+        return WebDriverWait(self.driver, timeout).until(
+            EC.visibility_of_element_located(locator))
+
+    @allure.step("Вводим текст '{text}' в поле с локатором {locator}")
     def send_keys(self, locator, text):
-        element = self.wait.until(EC.visibility_of_element_located(locator))
+        element = self.driver.find_element(*locator)
         element.clear()
         element.send_keys(text)
 
-    def get_element_text(self, locator):
-        element = self.wait.until(EC.visibility_of_element_located(locator))
-        return element.text
-
-    def is_element_present(self, locator):
+    @allure.step("Проверяем, отображается ли элемент с локатором {locator}")
+    def is_element_displayed(self, locator):
         try:
-            self.driver.find_element(*locator)
-            return True
+            element = self.driver.find_element(*locator)
+            return element.is_displayed()
         except NoSuchElementException:
             return False
 
-    def find_element(self, locator):
-        return self.driver.find_element(*locator)
+    @allure.step("Получаем текст из элемента с локатором {locator}")
+    def get_element_text(self, locator):
+        try:
+            element = self.driver.find_element(*locator)
+            return element.text.strip()
+        except NoSuchElementException:
+            return ""
+
+    @allure.step("Кликаем по элементу с использованием JavaScript: {element}")
+    def click_using_js(self, element):
+        browser_name = self.driver.capabilities['browserName'].lower()
+        if browser_name == 'firefox':
+            self.driver.execute_script("arguments[0].click();", element)
+        else:
+            element.click()
+
+    @allure.step("Ожидание элемента")
+    def wait_for_element(self, locator, timeout=10):
+        return WebDriverWait(self.driver, timeout).until(
+            EC.presence_of_element_located(locator))
+
+    @allure.step("Ожидание элемента пока он станет кликабельным")
+    def wait_for_clickable(self, locator, timeout=10):
+        return WebDriverWait(self.driver, timeout).until(
+            EC.element_to_be_clickable(locator))
+
+    @allure.step("Ожидание появляения текста")
+    def wait_for_text_in_element(self, locator, text, timeout=10):
+        return WebDriverWait(self.driver, timeout).until(
+            EC.text_to_be_present_in_element(locator, text))
+
+    @allure.step("Получение текста элементов с локатора {locator}")
+    def get_items(self, locator):
+        elements = self.driver.find_elements(*locator)
+        return [element.text.strip() for element in elements if element.text.strip()]
+
+    @allure.step("Ожидание выполнения условия с тайм-аутом {timeout} секунд")
+    def wait_for_condition(self, condition, timeout=10, poll_frequency=0.5):
+        WebDriverWait(self.driver, timeout, poll_frequency).until(lambda driver: condition(driver))
+
+
+
+
+
+
+
+
 
 
 
