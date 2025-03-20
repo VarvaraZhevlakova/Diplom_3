@@ -1,5 +1,10 @@
 import allure
-from page_objects.main_page import MainPage, OrderPage, IngredientPage, LoginPage
+
+from data import USER_CREDENTIALS
+from page_objects.ingredient_page import IngredientPage
+from page_objects.login_page import LoginPage
+from page_objects.main_page import MainPage
+from page_objects.order_page import OrderPage
 from tests.conftest import driver
 from urls import base_url_burgers, feed
 
@@ -12,7 +17,8 @@ class TestBaseFunctionally:
 
         order_page.click_order_feed()
         main_page.click_constructor()
-        current_url = driver.current_url
+
+        current_url = main_page.get_current_url()
         expected_url = base_url_burgers
 
         assert current_url == expected_url, f"Ожидался URL {expected_url}, но был {current_url}"
@@ -24,8 +30,10 @@ class TestBaseFunctionally:
 
         main_page.click_constructor()
         order_page.click_order_feed()
-        current_url = driver.current_url
+
+        current_url = order_page.get_current_url()
         expected_url = feed
+
         assert current_url == expected_url, f"Ожидался URL {expected_url}, но был {current_url}"
 
     @allure.title('Если кликнуть на ингредиент, появится всплывающее окно с деталями')
@@ -54,25 +62,20 @@ class TestBaseFunctionally:
         assert updated_count > initial_count, f"Каунтер не увеличился: {initial_count} -> {updated_count}"
 
     @allure.title('Залогиненный пользователь может оформить заказ.')
-    def test_logged_user_can_place_an_order(self, driver, test_user_credentials):
+    def test_logged_user_can_place_an_order(self, driver):
         ing_page = IngredientPage(driver)
         main_page = MainPage(driver)
         login_page = LoginPage(driver)
         order_page = OrderPage(driver)
 
-        email = test_user_credentials["email"]
-        password = test_user_credentials["password"]
+        email = USER_CREDENTIALS["email"]
+        password = USER_CREDENTIALS["password"]
 
         main_page.click_on_personal_account()
         login_page.send_email_to_input2(email)
         login_page.send_password_to_input2(password)
 
         login_page.click_login_button()
-
-        browser_name = driver.capabilities['browserName'].lower()
-
-        if browser_name != 'firefox':
-            main_page.click_constructor()
 
         initial_count = ing_page.get_ingredient_counter_value()
         ing_page.drag_and_drop_ingredient()

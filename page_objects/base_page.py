@@ -2,13 +2,14 @@ import allure
 from locators import Locators
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import NoSuchElementException
+from selenium.common.exceptions import NoSuchElementException, TimeoutException
 
 
 class BasePage:
-    def __init__(self, driver):
+    def __init__(self, driver, timeout=10):
         self.driver = driver
         self.locators = Locators()
+        self.wait = WebDriverWait(driver, timeout)
 
     @allure.step("Кликаем по элементу с локатором {locator}")
     def click_on_element(self, locator):
@@ -78,6 +79,27 @@ class BasePage:
     @allure.step("Ожидание выполнения условия с тайм-аутом {timeout} секунд")
     def wait_for_condition(self, condition, timeout=10, poll_frequency=0.5):
         WebDriverWait(self.driver, timeout, poll_frequency).until(lambda driver: condition(driver))
+
+    @allure.step("Получение текущего URL")
+    def get_current_url(self):
+        return self.driver.current_url
+
+    @allure.step("Клик на элемент черз браузер")
+    def click_element_by_browser(self, element):
+        browser_name = self.driver.capabilities['browserName'].lower()
+        if browser_name == 'firefox':
+            self.driver.execute_script("arguments[0].click();", element)
+        else:
+            element.click()
+
+    @allure.step("Поиск элемента")
+    def find_elements(self, locator):
+        return self.wait.until(EC.presence_of_all_elements_located(locator))
+
+    @allure.step("Поиск нескольких элементов")
+    def find_element(self, locator):
+        return self.wait.until(EC.presence_of_element_located(locator))
+
 
 
 

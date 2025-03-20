@@ -1,7 +1,8 @@
 import pytest
+
 from data import USER_CREDENTIALS
-from page_objects.base_page import BasePage
-from page_objects.main_page import LoginPage, MainPage
+from page_objects.login_page import LoginPage
+from page_objects.main_page import MainPage
 
 from urls import base_url_burgers
 from web_driver_factory import WebDriverFactory
@@ -23,18 +24,13 @@ def pytest_addoption(parser):
     parser.addoption("--browser", action="store", default="chrome", help="Выбор браузера: chrome, firefox")
 
 
-@pytest.fixture(scope="session")
-def test_user_credentials():
-    return USER_CREDENTIALS
-
-
 @pytest.fixture
-def login(driver, test_user_credentials):
+def login(driver):
     main_page = MainPage(driver)
     login_page = LoginPage(driver)
 
-    email = test_user_credentials["email"]
-    password = test_user_credentials["password"]
+    email = USER_CREDENTIALS["email"]
+    password = USER_CREDENTIALS["password"]
 
     main_page.click_on_personal_account()
     login_page.send_email_to_input2(email)

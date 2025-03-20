@@ -1,8 +1,7 @@
-import time
 import allure
-from selenium.webdriver.support.wait import WebDriverWait
-
-from page_objects.main_page import MainPage, OrderPage, IngredientPage
+from page_objects.ingredient_page import IngredientPage
+from page_objects.main_page import MainPage
+from page_objects.order_page import OrderPage
 from tests.conftest import driver
 
 
@@ -16,7 +15,7 @@ class TestOrderFeed:
         order_page.is_order_modal_visible()
 
         assert order_page.is_order_modal_visible(), "Всплывающее окно не появилось после клика на заказ"
-        assert order_page.is_order_modal_visible2(), "Детали заказа не отобразились во всплывающем окне"
+        assert order_page.is_order_modal_visible(), "Детали заказа не отобразились во всплывающем окне"
 
     @allure.title('Отображение заказов пользователя в ленте заказов')
     def test_displaying_user_orders_in_the_order_feed(self, driver, login):
@@ -25,11 +24,11 @@ class TestOrderFeed:
 
         main_page.click_on_personal_account()
         order_page.click_order_history()
-        time.sleep(3)
+        order_page.wait_for_order_history()
         history_orders = order_page.get_order_history_items()
 
         order_page.click_order_feed()
-        time.sleep(3)
+        order_page.wait_for_order_feed()
         feed_orders = order_page.get_order_list()
 
         history_order_numbers = {order.split()[0] for order in history_orders}
@@ -53,8 +52,7 @@ class TestOrderFeed:
         ing_page.wait_for_counter_update(initial_count)
         order_page.click_order_button()
 
-        WebDriverWait(order_page.driver, 10).until(
-            lambda driver: ing_page.is_modal_visible() and order_page.get_order_number() != "")
+        order_page.wait_for_order_number_update()
 
         order_page.close_modal_window()
         order_page.click_order_feed()
@@ -107,7 +105,6 @@ class TestOrderFeed:
         order_page.click_order_feed()
 
         order_page.wait_for_completed_today_update(initial_orders_in_progress)
-        time.sleep(3)
         orders_in_progress = int(order_page.get_orders_in_progress())
         assert orders_in_progress == initial_orders_in_progress, (
             f"Ожидалось, что количество заказов в работе увеличится. "

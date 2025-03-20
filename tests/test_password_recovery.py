@@ -1,5 +1,6 @@
 import allure
-from page_objects.main_page import MainPage, LoginPage
+from page_objects.login_page import LoginPage
+from page_objects.main_page import MainPage
 from tests.conftest import driver
 from urls import password_forgot_page, password_reset_page
 
@@ -13,8 +14,10 @@ class TestRecoveryPassword:
         main_page.click_on_personal_account()
         login_page.click_restore_password_link()
 
+        current_url = login_page.get_current_url()
         expected_url = password_forgot_page
-        assert expected_url in driver.current_url, "Переход на страницу восстановления пароля не произошел"
+
+        assert expected_url in current_url, "Переход на страницу восстановления пароля не произошел"
 
     @allure.title('Ввод почты и клик по кнопке «Восстановить»')
     def test_restore_password_process(self, driver):
